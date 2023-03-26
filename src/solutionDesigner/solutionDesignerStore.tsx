@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { FeatureCollection } from "geojson";
 import FeatureCollections from "./files";
 
-const applyFeatureProperties = (data: FeatureCollection) => {
+export const applyFeatureProperties = (data: FeatureCollection) => {
   const newFC = { ...data };
   newFC.features = newFC.features.map((f, i) => ({
     ...f,
@@ -23,7 +23,7 @@ export interface AppState {
   resetFeatureCollection: (index: number) => void;
   changeFeatureSet: (
     featureIndex: number,
-    featureSet: FeatureCollection
+    newFeatureSet: FeatureCollection
   ) => void;
 }
 
@@ -41,11 +41,11 @@ export const useStore = create<AppState>((set) => ({
   },
   changeFeatureSet: (
     featureSetIndex: number,
-    featureSet: FeatureCollection
+    newFeatureSet: FeatureCollection
   ) => {
     set((state) => {
       const newFS = state.featureCollections.map((fs, i) =>
-        i === featureSetIndex ? featureSet : fs
+        i === featureSetIndex ? newFeatureSet : fs
       );
       return { featureCollections: newFS };
     });

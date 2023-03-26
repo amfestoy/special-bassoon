@@ -21,7 +21,7 @@ const SideMenu = () => {
       <ButtonList>
         {featureCollections.map((_, i) => {
           return (
-            <li>
+            <li key={`solution_${i}`}>
               <Button
                 onClick={() => changeFeatureIndex(i)}
                 selected={i === featureIndex}

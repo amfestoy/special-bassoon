@@ -1,5 +1,12 @@
 import styled from "styled-components";
-import { Feature, intersect, Polygon, union, area } from "@turf/turf";
+import {
+  Feature,
+  intersect,
+  Polygon,
+  union,
+  area,
+  FeatureCollection,
+} from "@turf/turf";
 import { Geometry } from "geojson";
 
 import { useStore } from "../solutionDesignerStore";
@@ -40,7 +47,6 @@ const Statistics = () => {
     (f) => f.properties?.selected
   );
 
-  const areaPolygons = area(featureCollection);
   const unionPolygons = () => {
     if (selectedPolygons.length !== 2) return;
     const unifiedPolygon =
@@ -49,21 +55,40 @@ const Statistics = () => {
         selectedPolygons[1] as Feature<Polygon>
       ) ?? {};
     const newFeatureSet = { ...featureCollection };
-    newFeatureSet.features = [unifiedPolygon as Feature<Geometry>];
+    const unifiedPolygonWithStateProps = { ...unifiedPolygon, id: 0 };
+    newFeatureSet.features = [
+      unifiedPolygonWithStateProps as Feature<Geometry>,
+    ];
     changeFeatureSet(featureIndex, newFeatureSet);
   };
 
   const intersectPolygons = () => {
     if (selectedPolygons.length !== 2) return;
-    const uniFiedPolygon =
+    const intersectedPolygon =
       intersect(
         selectedPolygons[0] as Feature<Polygon>,
         selectedPolygons[1] as Feature<Polygon>
       ) ?? {};
     const newFeatureSet = { ...featureCollection };
-    newFeatureSet.features = [uniFiedPolygon as Feature<Geometry>];
+    const intersectedPolygonWithStateProps = { ...intersectedPolygon, id: 0 };
+    newFeatureSet.features = [
+      intersectedPolygonWithStateProps as Feature<Geometry>,
+    ];
     changeFeatureSet(featureIndex, newFeatureSet);
   };
+
+  let selectedArea = 0;
+  if (selectedPolygons.length === 1) {
+    selectedArea = area(selectedPolygons[0]);
+  }
+  if (selectedPolygons.length === 2) {
+    // taking area of the unified area of two polygons to avoid counting the intersected area twice
+    const unionOfArea = union(
+      selectedPolygons[0] as Feature<Polygon>,
+      selectedPolygons[1] as Feature<Polygon>
+    );
+    selectedArea = area(unionOfArea as unknown as FeatureCollection);
+  }
 
   const reset = () => {
     resetFeatureCollection(featureIndex);
@@ -72,8 +97,10 @@ const Statistics = () => {
     <MenuWrapper>
       <Header>Selected polygons</Header>
       <ButtonList>
-        {selectedPolygons.map((sp) => (
-          <li>{sp.id}</li>
+        {selectedPolygons.map((sp, i) => (
+          <li key={sp.id}>
+            {i !== 0 && ","} {sp.id}
+          </li>
         ))}
       </ButtonList>
       {selectedPolygons.length < 2 && (
@@ -100,7 +127,7 @@ const Statistics = () => {
       </ButtonList>
       <Header>Area of polygons</Header>
       <AreaInformation>
-        {Math.round(areaPolygons).toLocaleString()} m2
+        {Math.round(selectedArea).toLocaleString()} m2
       </AreaInformation>
     </MenuWrapper>
   );
